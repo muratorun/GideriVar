@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giderivar - Yakında</title>
-    <meta name="description" content="Kullanmadığınız eşyaları ücretsiz paylaşın, çevreye katkıda bulunun. Giderivar yakında sizlerle!">
+    <meta name="description"
+        content="Kullanmadığınız eşyaları ücretsiz paylaşın, çevreye katkıda bulunun. Giderivar yakında sizlerle!">
     <style>
         * {
             margin: 0;
@@ -20,7 +22,7 @@
             align-items: center;
             justify-content: center;
             color: white;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .container {
@@ -191,6 +193,7 @@
                 opacity: 0;
                 transform: translateY(50px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -201,15 +204,19 @@
             from {
                 text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
             }
+
             to {
                 text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
             }
         }
 
         @keyframes float {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateY(0px) rotate(0deg);
             }
+
             50% {
                 transform: translateY(-20px) rotate(180deg);
             }
@@ -245,6 +252,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="floating-shapes">
         <div class="shape"></div>
@@ -254,13 +262,14 @@
 
     <div class="container">
         <div class="logo">Giderivar</div>
-        
+
         <div class="tagline">
             Paylaş, Geri Dönüştür, Sürdürülebilir Yaşa
         </div>
-        
+
         <div class="description">
-            Kullanmadığınız eşyalarınızı ihtiyacı olan kişilerle ücretsiz paylaşabileceğiniz platform çok yakında sizlerle! Çevreye dost, toplumsal dayanışmayı destekleyen bir dijital buluşma noktası.
+            Kullanmadığınız eşyalarınızı ihtiyacı olan kişilerle ücretsiz paylaşabileceğiniz platform çok yakında
+            sizlerle! Çevreye dost, toplumsal dayanışmayı destekleyen bir dijital buluşma noktası.
         </div>
 
         <div class="features">
@@ -283,7 +292,7 @@
 
         <div class="email-signup">
             <h3 style="margin-bottom: 1rem;">Haber almak için e-posta adresinizi bırakın</h3>
-            <form class="email-form" action="https://formspree.io/f/xdkdgdkl" method="POST">
+            <form class="email-form" onsubmit="handleFormSubmit(event)">
                 <input type="email" name="email" class="email-input" placeholder="E-posta adresiniz" required>
                 <button type="submit" class="submit-btn">Haber Al</button>
             </form>
@@ -293,15 +302,60 @@
     </div>
 
     <script>
+        async function handleFormSubmit(event) {
+            event.preventDefault(); // Formun normal gönderimini durdur
+
+            const form = event.target;
+            const submitBtn = form.querySelector('.submit-btn');
+            const emailInput = form.querySelector('.email-input');
+            const email = emailInput.value;
+
+            // Buton durumunu değiştir
+            submitBtn.textContent = 'Gönderiliyor...';
+            submitBtn.disabled = true;
+
+            try {
+                // Formspree'ye AJAX ile gönder
+                const response = await fetch('https://formspree.io/f/xdkdgdkl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        _subject: 'Giderivar - Yeni E-posta Kaydı'
+                    })
+                });
+
+                if (response.ok) {
+                    // Başarılı
+                    alert('Teşekkürler!\n\n' + email + ' adresine sayfamız yayına alındığında bilgi vereceğiz.');
+                    form.reset();
+                } else {
+                    // Hata
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+
+            } catch (error) {
+                console.error('Hata:', error);
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            }
+
+            // Buton durumunu eski haline getir
+            submitBtn.textContent = 'Haber Al';
+            submitBtn.disabled = false;
+        }
+
         // Sayfa yüklendiğinde küçük bir animasyon efekti
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             document.body.style.opacity = '0';
             document.body.style.transition = 'opacity 0.5s ease-in-out';
-            
+
             setTimeout(() => {
                 document.body.style.opacity = '1';
             }, 100);
         });
     </script>
 </body>
+
 </html>
