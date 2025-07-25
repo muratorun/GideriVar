@@ -16,36 +16,99 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             overflow: auto;
+            position: relative;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 120px;
+            height: 120px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 180px;
+            height: 180px;
+            top: 50%;
+            right: 5%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 90px;
+            height: 90px;
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            width: 60px;
+            height: 60px;
+            top: 25%;
+            right: 25%;
+            animation-delay: 1s;
+        }
+
+        .shape:nth-child(5) {
+            width: 140px;
+            height: 140px;
+            bottom: 30%;
+            right: 30%;
+            animation-delay: 3s;
         }
 
         .container {
             text-align: center;
             max-width: 600px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 1s ease-out;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: fadeInUp 1.2s ease-out, containerFloat 6s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
         }
 
         .logo {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #fff, #f0f8ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: glow 2s ease-in-out infinite alternate;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            color: white;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            letter-spacing: -1px;
+            animation: logoGlow 2s ease-in-out infinite alternate;
         }
 
         .tagline {
@@ -71,34 +134,52 @@
 
         .feature {
             background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 2rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .feature:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            margin-bottom: 1.2rem;
+            display: inline-block;
+            animation: iconBounce 2s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .feature:hover .feature-icon {
+            transform: scale(1.2) rotate(5deg);
         }
 
         .feature h3 {
             font-size: 1.1rem;
             margin-bottom: 0.5rem;
+            color: white;
         }
 
         .feature p {
             font-size: 0.9rem;
             opacity: 0.8;
+            color: white;
         }
 
         .email-signup {
             margin: 2rem 0;
+        }
+
+        .email-signup h3 {
+            color: white;
+            margin-bottom: 1rem;
         }
 
         .email-form {
@@ -111,13 +192,14 @@
 
         .email-input {
             flex: 1;
-            padding: 1rem;
-            border: none;
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             font-size: 1rem;
             min-width: 200px;
+            transition: all 0.3s ease;
         }
 
         .email-input::placeholder {
@@ -126,87 +208,105 @@
 
         .email-input:focus {
             outline: none;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
         .submit-btn {
-            padding: 1rem 2rem;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            padding: 1.2rem 2.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24, #ff9ff3);
+            background-size: 200% 200%;
             border: none;
-            border-radius: 50px;
+            border-radius: 25px;
             color: white;
             font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
+            animation: buttonGlow 3s ease-in-out infinite;
         }
 
         .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            background-position: 100% 0;
         }
 
-
-
-        .floating-shapes {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
+        .submit-btn:active {
+            transform: translateY(-1px) scale(1.02);
         }
 
-        .shape {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        .shape:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
+        @keyframes containerFloat {
 
-        .shape:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
 
-        .shape:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            bottom: 20%;
-            left: 20%;
-            animation-delay: 4s;
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: translateY(60px) scale(0.9);
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
-        @keyframes glow {
+        @keyframes logoGlow {
             from {
                 text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
             }
 
             to {
-                text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+                text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        @keyframes buttonGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 4px 25px rgba(255, 107, 107, 0.6), 0 0 30px rgba(255, 107, 107, 0.3);
+            }
+        }
+
+        @keyframes iconBounce {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
             }
         }
 
@@ -214,18 +314,26 @@
 
             0%,
             100% {
-                transform: translateY(0px) rotate(0deg);
+                transform: translateY(0px) rotate(0deg) scale(1);
+            }
+
+            25% {
+                transform: translateY(-20px) rotate(90deg) scale(1.1);
             }
 
             50% {
-                transform: translateY(-20px) rotate(180deg);
+                transform: translateY(-10px) rotate(180deg) scale(0.9);
+            }
+
+            75% {
+                transform: translateY(-30px) rotate(270deg) scale(1.05);
             }
         }
 
         @media (max-width: 768px) {
             .container {
                 margin: 1rem;
-                padding: 1.5rem;
+                padding: 2rem;
             }
 
             .logo {
@@ -258,64 +366,62 @@
         <div class="shape"></div>
         <div class="shape"></div>
         <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
     </div>
 
     <div class="container">
         <div class="logo">Giderivar</div>
 
         <div class="tagline">
-            Paylaş, Geri Dönüştür, Sürdürülebilir Yaşa
+            Yeni Bir Dijital Deneyim Geliyor
         </div>
 
         <div class="description">
-            Kullanmadığınız eşyalarınızı ihtiyacı olan kişilerle ücretsiz paylaşabileceğiniz platform çok yakında
-            sizlerle! Çevreye dost, toplumsal dayanışmayı destekleyen bir dijital buluşma noktası.
+            Yakında hayatınızı kolaylaştıracak yenilikçi bir platform sizlerle buluşuyor. Sürdürülebilir yaşam ve
+            toplumsal fayda odaklı bu özel projeyi kaçırmayın.
         </div>
 
         <div class="features">
             <div class="feature">
-                <div class="feature-icon">🎁</div>
-                <h3>Ücretsiz Paylaşım</h3>
-                <p>Eşyalarınızı tamamen ücretsiz olarak paylaşın</p>
+                <div class="feature-icon">🚀</div>
+                <h3>Yenilikçi Yaklaşım</h3>
+                <p>Teknoloji ve toplumsal fayda buluşuyor</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">🌱</div>
-                <h3>Çevre Dostu</h3>
-                <p>Atık azaltarak çevreye katkıda bulunun</p>
+                <h3>Sürdürülebilir Çözüm</h3>
+                <p>Geleceğe dost bir platform deneyimi</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">🤝</div>
-                <h3>Toplumsal Dayanışma</h3>
-                <p>İhtiyaç sahipleriyle bir araya gelin</p>
+                <h3>Toplumsal Etki</h3>
+                <p>Birlikte daha güçlü bir ekosistem</p>
             </div>
         </div>
 
         <div class="email-signup">
-            <h3 style="margin-bottom: 1rem;">Haber almak için e-posta adresinizi bırakın</h3>
+            <h3>Lansmandan haberdar olmak istiyorum</h3>
             <form class="email-form" onsubmit="handleFormSubmit(event)">
                 <input type="email" name="email" class="email-input" placeholder="E-posta adresiniz" required>
                 <button type="submit" class="submit-btn">Haber Al</button>
             </form>
         </div>
-
-
     </div>
 
     <script>
         async function handleFormSubmit(event) {
-            event.preventDefault(); // Formun normal gönderimini durdur
+            event.preventDefault();
 
             const form = event.target;
             const submitBtn = form.querySelector('.submit-btn');
             const emailInput = form.querySelector('.email-input');
             const email = emailInput.value;
 
-            // Buton durumunu değiştir
             submitBtn.textContent = 'Gönderiliyor...';
             submitBtn.disabled = true;
 
             try {
-                // Formspree'ye AJAX ile gönder
                 const response = await fetch('https://formspree.io/f/xdkdgdkl', {
                     method: 'POST',
                     headers: {
@@ -328,11 +434,9 @@
                 });
 
                 if (response.ok) {
-                    // Başarılı
-                    alert('Teşekkürler!\n\n' + email + ' adresine sayfamız yayına alındığında bilgi vereceğiz.');
+                    alert('Teşekkürler!\n\n' + email + '\n\nLansmanla ilgili güncellemeler size ulaşacak.');
                     form.reset();
                 } else {
-                    // Hata
                     alert('Bir hata oluştu. Lütfen tekrar deneyin.');
                 }
 
@@ -341,12 +445,10 @@
                 alert('Bir hata oluştu. Lütfen tekrar deneyin.');
             }
 
-            // Buton durumunu eski haline getir
             submitBtn.textContent = 'Haber Al';
             submitBtn.disabled = false;
         }
 
-        // Sayfa yüklendiğinde küçük bir animasyon efekti
         window.addEventListener('load', function () {
             document.body.style.opacity = '0';
             document.body.style.transition = 'opacity 0.5s ease-in-out';
