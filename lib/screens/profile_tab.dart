@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../models/product_model.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../services/localization_service.dart';
+import '../utils/constants.dart';
 import 'product_detail_screen.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -609,9 +612,9 @@ class _ProfileTabState extends State<ProfileTab> {
             ),
             const SizedBox(height: 20),
             
-            const Text(
-              'Ayarlar',
-              style: TextStyle(
+            Text(
+              context.tr('settings'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -620,13 +623,23 @@ class _ProfileTabState extends State<ProfileTab> {
             const SizedBox(height: 20),
             
             ListTile(
+              leading: const Icon(Icons.language),
+              title: Text(context.tr('language')),
+              subtitle: Text(context.tr('change_language')),
+              onTap: () {
+                Navigator.pop(context);
+                _showLanguageSelection();
+              },
+            ),
+            
+            ListTile(
               leading: const Icon(Icons.person),
-              title: const Text('Profil Düzenle'),
+              title: Text(context.tr('edit_profile')),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Profil düzenleme özelliği yakında!'),
+                  SnackBar(
+                    content: Text(context.tr('feature_coming_soon')),
                   ),
                 );
               },
@@ -634,12 +647,12 @@ class _ProfileTabState extends State<ProfileTab> {
             
             ListTile(
               leading: const Icon(Icons.notifications),
-              title: const Text('Bildirimler'),
+              title: Text(context.tr('notifications')),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Bildirim ayarları yakında!'),
+                  SnackBar(
+                    content: Text(context.tr('feature_coming_soon')),
                   ),
                 );
               },
@@ -647,12 +660,12 @@ class _ProfileTabState extends State<ProfileTab> {
             
             ListTile(
               leading: const Icon(Icons.help),
-              title: const Text('Yardım'),
+              title: Text(context.tr('help')),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Yardım sayfası yakında!'),
+                  SnackBar(
+                    content: Text(context.tr('feature_coming_soon')),
                   ),
                 );
               },
@@ -662,9 +675,9 @@ class _ProfileTabState extends State<ProfileTab> {
             
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                'Çıkış Yap',
-                style: TextStyle(color: Colors.red),
+              title: Text(
+                context.tr('logout'),
+                style: const TextStyle(color: Colors.red),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -681,12 +694,12 @@ class _ProfileTabState extends State<ProfileTab> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Çıkış Yap'),
-        content: const Text('Çıkış yapmak istediğinizden emin misiniz?'),
+        title: Text(context.tr('logout')),
+        content: Text(context.tr('logout_confirmation')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: Text(context.tr('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -700,9 +713,71 @@ class _ProfileTabState extends State<ProfileTab> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Çıkış Yap'),
+            child: Text(context.tr('logout')),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLanguageSelection() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            Text(
+              context.tr('select_language'),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            ...AppConstants.supportedLanguages.map((languageCode) {
+              final languageName = AppConstants.languageNames[languageCode] ?? languageCode;
+              final localizationService = Provider.of<LocalizationService>(context, listen: false);
+              final isSelected = localizationService.currentLanguage == languageCode;
+              
+              return ListTile(
+                leading: Icon(
+                  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: isSelected ? const Color(0xFF667eea) : Colors.grey,
+                ),
+                title: Text(
+                  languageName,
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? const Color(0xFF667eea) : Colors.black,
+                  ),
+                ),
+                onTap: () async {
+                  await localizationService.changeLanguage(languageCode);
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                },
+              );
+            }).toList(),
+          ],
+        ),
       ),
     );
   }

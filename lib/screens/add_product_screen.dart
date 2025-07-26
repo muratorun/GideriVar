@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../services/location_service.dart';
 import '../utils/constants.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -18,11 +19,67 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _contactInfoController = TextEditingController();
   final _sellerNameController = TextEditingController();
   
+  List<LocationModel> _countries = [];
+  List<LocationModel> _cities = [];
+  String? _selectedCountry;
   String? _selectedRegion;
   String? _selectedCategory;
   ContactType _selectedContactType = ContactType.phone;
   bool _isPremium = false;
   bool _isLoading = false;
+  bool _isLoadingLocations = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCountries();
+  }
+
+  Future<void> _loadCountries() async {
+    if (!AppConstants.useOnlineLocationService) {
+      // Fallback regions kullan
+      setState(() {
+        _countries = AppConstants.fallbackRegions
+            .map((region) => LocationModel(name: region, code: region.toLowerCase()))
+            .toList();
+      });
+      return;
+    }
+    
+    setState(() => _isLoadingLocations = true);
+    try {
+      final countries = await LocationService().getCountries();
+      setState(() {
+        _countries = countries;
+        _isLoadingLocations = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingLocations = false);
+      // Fallback
+      _countries = AppConstants.fallbackRegions
+          .map((region) => LocationModel(name: region, code: region.toLowerCase()))
+          .toList();
+    }
+  }
+
+  Future<void> _loadCitiesForCountry(String countryCode) async {
+    if (!AppConstants.useOnlineLocationService) return;
+    
+    setState(() => _isLoadingLocations = true);
+    try {
+      final cities = await LocationService().getCitiesByCountry(countryCode);
+      setState(() {
+        _cities = cities;
+        _isLoadingLocations = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingLocations = false);
+      // Türkiye için fallback
+      if (countryCode.toLowerCase() == 'tr') {
+        _cities = LocationService().getTurkishCities();
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -129,29 +186,88 @@ class _AddProductScreenState extends State<AddProductScreen> {
               
               const SizedBox(height: 16),
               
-              // Bölge seçimi
+              // Ülke/Bölge seçimi
               DropdownButtonFormField<String>(
-                value: _selectedRegion,
+                value: _selectedCountry,
                 decoration: const InputDecoration(
-                  labelText: 'Şehir *',
+                  labelText: 'Country/Region *',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.public),
                 ),
-                items: AppConstants.turkishCities.map((city) {
+                items: _countries.map((country) {
                   return DropdownMenuItem(
-                    value: city,
-                    child: Text(city),
+                    value: country.name,
+                    child: Row(
+                      children: [
+                        if (country.flag != null) Text(country.flag!),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(country.name)),
+                      ],
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() => _selectedRegion = value);
+                  setState(() {
+                    _selectedCountry = value;
+                    _selectedRegion = null; // Reset city when country changes
+                  });
+                  if (value != null && AppConstants.useOnlineLocationService) {
+                    final selectedCountry = _countries.firstWhere(
+                      (c) => c.name == value,
+                      orElse: () => LocationModel(name: value, code: value),
+                    );
+                    _loadCitiesForCountry(selectedCountry.code);
+                  }
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Şehir seçimi gerekli';
+                    return 'Country/Region selection required';
                   }
                   return null;
                 },
               ),
+              
+              const SizedBox(height: 16),
+              
+              // Şehir seçimi
+              DropdownButtonFormField<String>(
+                value: _selectedRegion,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_city),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: 'Not Specified',
+                    child: Text('Not Specified'),
+                  ),
+                  ..._cities.map((city) {
+                    return DropdownMenuItem(
+                      value: city.name,
+                      child: Text(city.name),
+                    );
+                  }),
+                ],
+                onChanged: (value) {
+                  setState(() => _selectedRegion = value);
+                },
+              ),
+              
+              if (_isLoadingLocations) ...[
+                const SizedBox(height: 8),
+                const Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Loading locations...'),
+                  ],
+                ),
+              ],
               
               const SizedBox(height: 24),
               

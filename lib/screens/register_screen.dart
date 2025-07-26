@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../utils/constants.dart';
 import 'main_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -100,9 +101,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Giderivar',
-                          style: TextStyle(
+                        Text(
+                          AppConstants.projectName,
+                          style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF667eea),

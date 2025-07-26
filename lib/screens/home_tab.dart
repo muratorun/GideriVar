@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../services/database_service.dart';
 import '../services/ad_service.dart';
+import '../services/location_service.dart';
 import '../utils/constants.dart';
 import 'product_detail_screen.dart';
 
@@ -14,14 +15,70 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   List<ProductModel> _products = [];
+  List<LocationModel> _countries = [];
+  List<LocationModel> _cities = [];
   bool _isLoading = true;
+  bool _isLoadingLocations = false;
+  String? _selectedCountry;
   String? _selectedRegion;
   String? _selectedCategory;
+  LocationModel? _currentLocation;
 
   @override
   void initState() {
     super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // Kullanıcının mevcut konumunu al
+    if (AppConstants.useOnlineLocationService) {
+      _currentLocation = await LocationService().getCurrentLocation();
+      if (_currentLocation != null) {
+        _selectedCountry = _currentLocation!.name;
+      }
+    }
+    
     _loadProducts();
+    _loadCountries();
+  }
+
+  Future<void> _loadCountries() async {
+    if (!AppConstants.useOnlineLocationService) return;
+    
+    setState(() => _isLoadingLocations = true);
+    try {
+      final countries = await LocationService().getCountries();
+      setState(() {
+        _countries = countries;
+        _isLoadingLocations = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingLocations = false);
+      // Fallback bölgeleri kullan
+      _countries = AppConstants.fallbackRegions
+          .map((region) => LocationModel(name: region, code: region.toLowerCase()))
+          .toList();
+    }
+  }
+
+  Future<void> _loadCitiesForCountry(String countryCode) async {
+    if (!AppConstants.useOnlineLocationService) return;
+    
+    setState(() => _isLoadingLocations = true);
+    try {
+      final cities = await LocationService().getCitiesByCountry(countryCode);
+      setState(() {
+        _cities = cities;
+        _isLoadingLocations = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingLocations = false);
+      // Türkiye için fallback
+      if (countryCode.toLowerCase() == 'tr') {
+        _cities = LocationService().getTurkishCities();
+      }
+    }
   }
 
   Future<void> _loadProducts() async {
@@ -48,9 +105,9 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Giderivar',
-          style: TextStyle(
+        title: Text(
+          AppConstants.projectName,
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Color(0xFF667eea),
           ),
@@ -151,38 +208,148 @@ class _HomeTabState extends State<HomeTab> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Filtrele'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        title: const Row(
           children: [
-            DropdownButtonFormField<String>(
-              value: _selectedRegion,
-              decoration: const InputDecoration(labelText: 'Şehir'),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Tüm şehirler')),
-                ...AppConstants.turkishCities.map(
-                  (city) => DropdownMenuItem(value: city, child: Text(city)),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedRegion = value);
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(labelText: 'Kategori'),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Tüm kategoriler')),
-                ...AppConstants.categories.map(
-                  (category) => DropdownMenuItem(value: category, child: Text(category)),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedCategory = value);
-              },
-            ),
+            Icon(Icons.filter_list),
+            SizedBox(width: 8),
+            Text('Filter Products'),
           ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ülke/Bölge seçimi
+              DropdownButtonFormField<String>(
+                value: _selectedCountry,
+                decoration: const InputDecoration(
+                  labelText: 'Country/Region',
+                  prefixIcon: Icon(Icons.public),
+                ),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('All Regions')),
+                  if (AppConstants.useOnlineLocationService && _countries.isNotEmpty)
+                    ..._countries.map(
+                      (country) => DropdownMenuItem(
+                        value: country.name,
+                        child: Row(
+                          children: [
+                            if (country.flag != null) Text(country.flag!),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(country.name)),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ...AppConstants.fallbackRegions.map(
+                      (region) => DropdownMenuItem(
+                        value: region,
+                        child: Text(region),
+                      ),
+                    ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCountry = value;
+                    _selectedRegion = null; // Reset city when country changes
+                  });
+                  if (value != null && AppConstants.useOnlineLocationService) {
+                    final selectedCountry = _countries.firstWhere(
+                      (c) => c.name == value,
+                      orElse: () => LocationModel(name: value, code: value),
+                    );
+                    _loadCitiesForCountry(selectedCountry.code);
+                  }
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Şehir seçimi
+              DropdownButtonFormField<String>(
+                value: _selectedRegion,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  prefixIcon: Icon(Icons.location_city),
+                ),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('All Cities')),
+                  if (_cities.isNotEmpty)
+                    ..._cities.map(
+                      (city) => DropdownMenuItem(
+                        value: city.name,
+                        child: Text(city.name),
+                      ),
+                    ),
+                ],
+                onChanged: (value) {
+                  setState(() => _selectedRegion = value);
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Kategori seçimi
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  prefixIcon: Icon(Icons.category),
+                ),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('All Categories')),
+                  ...AppConstants.categories.map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(_getLocalizedCategory(category)),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() => _selectedCategory = value);
+                },
+              ),
+              
+              if (_isLoadingLocations) ...[
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Loading locations...'),
+                  ],
+                ),
+              ],
+              
+              if (_currentLocation != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.my_location, size: 16, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Current: ${_currentLocation!.name}',
+                          style: const TextStyle(fontSize: 12, color: Colors.blue),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -208,6 +375,21 @@ class _HomeTabState extends State<HomeTab> {
         builder: (context) => ProductDetailScreen(product: product),
       ),
     );
+  }
+
+  String _getLocalizedCategory(String category) {
+    // Basit locale detection (genişletilebilir)
+    try {
+      final locale = Localizations.localeOf(context).languageCode;
+      
+      if (AppConstants.categoryTranslations.containsKey(locale)) {
+        return AppConstants.categoryTranslations[locale]![category] ?? category;
+      }
+    } catch (e) {
+      // Fallback to original if locale detection fails
+    }
+    
+    return category;
   }
 }
 
