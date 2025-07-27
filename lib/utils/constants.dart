@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class AppConstants {
   // Project Information
   static const String projectName = 'GideriVar';
@@ -17,9 +20,39 @@ class AppConstants {
   static const String defaultCountry = 'Global';
   static const String defaultCity = 'All Cities';
   
-  // API Keys (kullanıcı tarafından doldurulacak)
-  static const String rapidApiKey = 'YOUR_RAPIDAPI_KEY_HERE';
-  static const String googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+  // API Keys (platform specific)
+  static const String rapidApiKey = 'ab0a109787mshe1e3813ee310877p17e3dajsn319ed0cd58a7';
+  
+  // Google Maps API Keys (platform specific)
+  static const String googleMapsApiKeyAndroid = 'AIzaSyCtYdc_5JzDvmuJfpE7lTyi7g1S1BzVjEQ';
+  static const String googleMapsApiKeyIOS = 'AIzaSyD8cXSvRf1RGyDMjI_kAK6AVNHeqSImjwc';
+  static const String googleMapsApiKeyWeb = 'AIzaSyBI5UBPgq_85t-WuZotwqDzAOUmteBNXJk';
+  
+  // Platform detector için Google Maps API Key
+  static String get googleMapsApiKey {
+    // Web için
+    if (kIsWeb) {
+      return googleMapsApiKeyWeb;
+    }
+    // Mobile platforms için
+    else {
+      try {
+        if (Platform.isIOS) {
+          return googleMapsApiKeyIOS;
+        } else {
+          return googleMapsApiKeyAndroid;
+        }
+      } catch (e) {
+        // Fallback olarak Android key
+        return googleMapsApiKeyAndroid;
+      }
+    }
+  }
+  
+  // Google Maps API URLs
+  static const String geocodingBaseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
+  static const String placesBaseUrl = 'https://maps.googleapis.com/maps/api/place';
+  static const String directionsBaseUrl = 'https://maps.googleapis.com/maps/api/directions/json';
   
   // Fallback regions (API erişimi yoksa)
   static const List<String> fallbackRegions = [

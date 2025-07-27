@@ -424,15 +424,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 child: product.imageUrls.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
+                        child: _buildImage(
                           product.imageUrls.first,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.image_not_supported,
-                              color: Colors.grey,
-                            );
-                          },
                         ),
                       )
                     : const Icon(
@@ -780,5 +774,32 @@ class _ProfileTabState extends State<ProfileTab> {
         ),
       ),
     );
+  }
+
+  // Helper function to determine if URL is asset or network
+  Widget _buildImage(String imageUrl, {BoxFit? fit}) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.image_not_supported,
+            color: Colors.grey,
+          );
+        },
+      );
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(
+            Icons.image_not_supported,
+            color: Colors.grey,
+          );
+        },
+      );
+    }
   }
 }

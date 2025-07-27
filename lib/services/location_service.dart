@@ -70,7 +70,7 @@ class LocationService {
           'https://wft-geo-db.p.rapidapi.com/v1/geo/countries/$countryCode/places?types=CITY&limit=100'
         ),
         headers: {
-          'X-RapidAPI-Key': 'YOUR_RAPIDAPI_KEY', // Bu key'i kullanıcıdan alınacak
+          'X-RapidAPI-Key': AppConstants.rapidApiKey,
           'X-RapidAPI-Host': 'wft-geo-db.p.rapidapi.com',
         },
       );

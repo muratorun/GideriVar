@@ -204,21 +204,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             },
             itemCount: widget.product.imageUrls.length,
             itemBuilder: (context, index) {
-              return Image.network(
+              return _buildImage(
                 widget.product.imageUrls[index],
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  );
-                },
               );
             },
           ),
@@ -456,5 +444,44 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Helper function to determine if URL is asset or network
+  Widget _buildImage(String imageUrl, {BoxFit? fit}) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: 64,
+                color: Colors.grey,
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: 64,
+                color: Colors.grey,
+              ),
+            ),
+          );
+        },
+      );
+    }
   }
 }

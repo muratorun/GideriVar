@@ -166,7 +166,7 @@ class DatabaseService {
         id: '1',
         title: 'iPhone 12 Pro',
         description: 'Temiz kullanılmış iPhone 12 Pro. Hiçbir problemi yok.',
-        imageUrls: ['https://via.placeholder.com/300'],
+        imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
         sellerId: 'seller1',
         sellerName: 'Ahmet Yılmaz',
         contactType: ContactType.whatsapp,
@@ -180,7 +180,7 @@ class DatabaseService {
         id: '2',
         title: 'MacBook Air M1',
         description: 'Az kullanılmış MacBook Air M1. Kutusu ve şarj cihazı mevcut.',
-        imageUrls: ['https://via.placeholder.com/300'],
+        imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
         sellerId: 'seller2',
         sellerName: 'Zeynep Kaya',
         contactType: ContactType.phone,
@@ -193,7 +193,7 @@ class DatabaseService {
         id: '3',
         title: 'Gömlek Takımı',
         description: 'Hiç giyilmemiş erkek gömlek takımı. Bedeni L.',
-        imageUrls: ['https://via.placeholder.com/300'],
+        imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
         sellerId: 'seller3',
         sellerName: 'Mehmet Demir',
         contactType: ContactType.instagram,

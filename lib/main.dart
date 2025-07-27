@@ -8,119 +8,78 @@ import 'screens/register_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/add_product_screen.dart';
 
-void
-main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize localization service
-  await LocalizationService().initialize();
+  // Initialize localization service ONCE
+  final localizationService = LocalizationService();
+  await localizationService.initialize();
   
   runApp(
-    const GideriVarApp(),
+    ChangeNotifierProvider.value(
+      value: localizationService,
+      child: const GideriVarApp(),
+    ),
   );
 }
 
-class GideriVarApp
-    extends
-        StatelessWidget {
-  const GideriVarApp({
-    super.key,
-  });
+class GideriVarApp extends StatelessWidget {
+  const GideriVarApp({super.key});
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return ChangeNotifierProvider(
-      create: (_) => LocalizationService(),
-      child: Consumer<LocalizationService>(
-        builder: (context, localizationService, child) {
-          return MaterialApp(
-            title: AppConstants.projectName,
-            debugShowCheckedModeBanner: false,
-            locale: localizationService.currentLocale,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: localizationService.supportedLocales,
-            theme: ThemeData(
-              primarySwatch: Colors.deepPurple,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-            ),
-            home: const SplashScreen(),
-            routes: {
-              '/login':
-                  (
-                    context,
-                  ) => const LoginScreen(),
-              '/register':
-                  (
-                    context,
-                  ) => const RegisterScreen(),
-              '/main':
-                  (
-                    context,
-                  ) => const MainScreen(),
-              '/add-product':
-                  (
-                    context,
-                  ) => const AddProductScreen(),
-            },
-          );
-        },
-      ),
+  Widget build(BuildContext context) {
+    return Consumer<LocalizationService>(
+      builder: (context, localizationService, child) {
+        return MaterialApp(
+          title: AppConstants.projectName,
+          debugShowCheckedModeBanner: false,
+          locale: localizationService.currentLocale,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: localizationService.supportedLocales,
+          theme: ThemeData(
+            primarySwatch: Colors.deepPurple,
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          home: const SplashScreen(),
+          routes: {
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
+            '/main': (context) => const MainScreen(),
+            '/add-product': (context) => const AddProductScreen(),
+          },
+        );
+      },
     );
   }
 }
 
-class SplashScreen
-    extends
-        StatefulWidget {
-  const SplashScreen({
-    super.key,
-  });
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
   @override
-  State<
-    SplashScreen
-  >
-  createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState
-    extends
-        State<
-          SplashScreen
-        > {
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
     _navigateToLogin();
   }
 
-  Future<
-    void
-  >
-  _navigateToLogin() async {
-    await Future.delayed(
-      const Duration(
-        seconds: 3,
-      ),
-    );
+  Future<void> _navigateToLogin() async {
+    await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/login',
-      );
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -128,12 +87,8 @@ class _SplashScreenState
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(
-                0xFF667eea,
-              ),
-              Color(
-                0xFF764ba2,
-              ),
+              Color(0xFF667eea),
+              Color(0xFF764ba2),
             ],
           ),
         ),
@@ -149,9 +104,7 @@ class _SplashScreenState
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               Text(
                 context.tr('app_slogan'),
                 style: const TextStyle(
@@ -160,16 +113,9 @@ class _SplashScreenState
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(
-                height: 40,
-              ),
-              CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<
-                      Color
-                    >(
-                      Colors.white,
-                    ),
+              const SizedBox(height: 40),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ],
           ),
