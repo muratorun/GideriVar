@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
+import '../widgets/contact_method_display.dart';
 import '../services/database_service.dart';
 import '../services/ad_service.dart';
 import '../services/location_service.dart';
@@ -487,25 +488,33 @@ class _ProductCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Row(
-                      children: [
-                        Text(
-                          product.contactType.icon,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            product.sellerName,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                    // İletişim kanalları
+                    if (product.contactMethods.isNotEmpty)
+                      ContactMethodChips(
+                        contactMethods: product.contactMethods,
+                        maxVisible: 2,
+                      )
+                    else
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.grey,
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              product.sellerName,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),

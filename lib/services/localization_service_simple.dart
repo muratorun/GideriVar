@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
 import '../utils/constants.dart';
 
 class LocalizationService extends ChangeNotifier {
@@ -67,17 +66,6 @@ class LocalizationService extends ChangeNotifier {
         'register': 'Register',
         'email': 'Email',
         'password': 'Password',
-        'settings': 'Settings',
-        'language': 'Language',
-        'change_language': 'Change Language',
-        'edit_profile': 'Edit Profile',
-        'feature_coming_soon': 'This feature is coming soon',
-        'notifications': 'Notifications',
-        'help': 'Help',
-        'logout': 'Logout',
-        'logout_confirmation': 'Are you sure you want to logout?',
-        'cancel': 'Cancel',
-        'select_language': 'Select Language',
       },
       'tr': {
         'app_name': 'GideriVar',
@@ -85,33 +73,9 @@ class LocalizationService extends ChangeNotifier {
         'register': 'Kayıt Ol',
         'email': 'E-posta',
         'password': 'Şifre',
-        'settings': 'Ayarlar',
-        'language': 'Dil',
-        'change_language': 'Dil Değiştir',
-        'edit_profile': 'Profili Düzenle',
-        'feature_coming_soon': 'Bu özellik yakında gelecek',
-        'notifications': 'Bildirimler',
-        'help': 'Yardım',
-        'logout': 'Çıkış Yap',
-        'logout_confirmation': 'Çıkış yapmak istediğinizden emin misiniz?',
-        'cancel': 'İptal',
-        'select_language': 'Dil Seçin',
       },
     };
 
     return translations[_currentLanguage]?[key] ?? key;
-  }
-}
-
-// Extension method for easy access from BuildContext
-extension LocalizationExtension on BuildContext {
-  String tr(String key) {
-    try {
-      final localizationService = Provider.of<LocalizationService>(this, listen: false);
-      return localizationService.translate(key);
-    } catch (e) {
-      debugPrint('Translation error for key "$key": $e');
-      return key; // Return key as fallback
-    }
   }
 }

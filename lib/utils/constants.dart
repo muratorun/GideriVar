@@ -1,19 +1,47 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+
+// App Colors
+class AppColors {
+  static const Color primary = Color(0xFF2E7D32);
+  static const Color secondary = Color(0xFF4CAF50);
+  static const Color background = Color(0xFFF5F5F5);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color error = Color(0xFFD32F2F);
+}
 
 class AppConstants {
   // Project Information
   static const String projectName = 'GideriVar';
   
-  // Parametrik değerler - kolayca değiştirilebilir
+  // Business Model Parametrik Değerler - kolayca değiştirilebilir
   static const int defaultPurchaseLimit = 1;
   static const int premiumPurchaseLimit = 5;
+  static const bool requireAdForContactInfo = true;
   
   // Firebase Collection Names
   static const String usersCollection = 'users';
   static const String productsCollection = 'products';
   static const String purchasesCollection = 'purchases';
+  static const String adViewsCollection = 'ad_views';
   static const String locationsCollection = 'locations';
+  
+  // Contact Method Types
+  static const List<String> contactMethods = [
+    'phone',
+    'whatsapp', 
+    'email',
+    'instagram'
+  ];
+  
+  // Contact Method Display Names (localization için)
+  static const Map<String, String> contactMethodNames = {
+    'phone': 'Telefon',
+    'whatsapp': 'WhatsApp',
+    'email': 'E-mail',
+    'instagram': 'Instagram'
+  };
   
   // Location Settings
   static const bool useOnlineLocationService = true;

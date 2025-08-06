@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart'; // Android ve iOS için güncel versiyon
 import '../models/user_model.dart';
 import '../utils/constants.dart';
 
@@ -7,21 +10,20 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  // Simüle edilmiş auth durumu - Firebase entegrasyonunda değiştirilecek
-  bool _isAuthenticated = false;
-  String? _currentUserId;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  bool get isAuthenticated => _isAuthenticated;
-  String? get currentUserId => _currentUserId;
+  // Auth durumu
+  bool get isAuthenticated => _auth.currentUser != null;
+  String? get currentUserId => _auth.currentUser?.uid;
 
   // Email/Password ile kayıt
   Future<bool> signUpWithEmailPassword(String email, String password) async {
     try {
-      // Firebase Auth entegrasyonu eklenecek
-      await Future.delayed(const Duration(seconds: 2)); // Simülasyon
-      _isAuthenticated = true;
-      _currentUserId = 'user_${DateTime.now().millisecondsSinceEpoch}';
-      return true;
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return credential.user != null;
     } catch (e) {
       debugPrint('Sign up error: $e');
       return false;
@@ -31,27 +33,56 @@ class AuthService {
   // Email/Password ile giriş
   Future<bool> signInWithEmailPassword(String email, String password) async {
     try {
-      // Firebase Auth entegrasyonu eklenecek
-      await Future.delayed(const Duration(seconds: 2)); // Simülasyon
-      _isAuthenticated = true;
-      _currentUserId = 'user_${DateTime.now().millisecondsSinceEpoch}';
-      return true;
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return credential.user != null;
     } catch (e) {
       debugPrint('Sign in error: $e');
       return false;
     }
   }
 
-  // Google ile giriş
+    // Google ile giriş (Google Sign-In 7.x API - Android ve iOS uyumlu)
   Future<bool> signInWithGoogle() async {
     try {
-      // Google Sign In entegrasyonu eklenecek
-      await Future.delayed(const Duration(seconds: 2)); // Simülasyon
-      _isAuthenticated = true;
-      _currentUserId = 'google_user_${DateTime.now().millisecondsSinceEpoch}';
-      return true;
+      debugPrint('Google Sign-In process started');
+      
+      // Google Sign-In 7.x API - authenticate() kullan
+      final GoogleSignInAccount? googleAccount = await GoogleSignIn.instance.authenticate();
+      
+      if (googleAccount == null) {
+        debugPrint('Google Sign-In cancelled by user');
+        return false;
+      }
+
+      // Authorization için access token al
+      final scopes = <String>['email', 'profile'];
+      final authClient = googleAccount.authorizationClient;
+      final authorization = await authClient.authorizeScopes(scopes);
+      
+      // Authentication data al
+      final GoogleSignInAuthentication googleAuth = googleAccount.authentication;
+
+      // Firebase credential oluştur
+      final credential = GoogleAuthProvider.credential(
+        accessToken: authorization.accessToken, // Authorization client'dan access token
+        idToken: googleAuth.idToken,
+      );
+
+      // Firebase'e Google credential ile giriş yap
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      
+      if (userCredential.user != null) {
+        debugPrint('Google Sign-In successful: ${userCredential.user!.email}');
+        return true;
+      } else {
+        debugPrint('Google Sign-In failed: No user returned');
+        return false;
+      }
     } catch (e) {
-      debugPrint('Google sign in error: $e');
+      debugPrint('Google Sign-In error: $e');
       return false;
     }
   }
@@ -59,9 +90,8 @@ class AuthService {
   // Çıkış
   Future<void> signOut() async {
     try {
-      // Firebase Auth sign out eklenecek
-      _isAuthenticated = false;
-      _currentUserId = null;
+      await _auth.signOut();
+      debugPrint('User signed out successfully');
     } catch (e) {
       debugPrint('Sign out error: $e');
     }
@@ -70,8 +100,7 @@ class AuthService {
   // Şifre sıfırlama
   Future<bool> resetPassword(String email) async {
     try {
-      // Firebase Auth password reset eklenecek
-      await Future.delayed(const Duration(seconds: 1)); // Simülasyon
+      await _auth.sendPasswordResetEmail(email: email);
       return true;
     } catch (e) {
       debugPrint('Password reset error: $e');
@@ -81,16 +110,17 @@ class AuthService {
 
   // Mevcut kullanıcıyı getir
   Future<UserModel?> getCurrentUser() async {
-    if (!_isAuthenticated || _currentUserId == null) {
+    final user = _auth.currentUser;
+    if (user == null) {
       return null;
     }
 
-    // Simüle edilmiş kullanıcı verisi - Firebase'den gelecek
+    // Firebase kullanıcı verisi
     return UserModel(
-      id: _currentUserId!,
-      email: 'user@example.com',
-      displayName: 'Test User',
-      createdAt: DateTime.now(),
+      id: user.uid,
+      email: user.email ?? 'user@example.com',
+      displayName: user.displayName ?? 'User',
+      createdAt: user.metadata.creationTime ?? DateTime.now(),
       purchaseLimit: AppConstants.defaultPurchaseLimit,
       currentPurchases: 0,
       region: 'İstanbul',

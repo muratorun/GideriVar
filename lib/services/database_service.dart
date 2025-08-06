@@ -1,5 +1,6 @@
 import '../models/product_model.dart';
 import '../models/user_model.dart';
+import '../models/contact_method.dart';
 import '../utils/constants.dart';
 
 class DatabaseService {
@@ -169,8 +170,12 @@ class DatabaseService {
         imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
         sellerId: 'seller1',
         sellerName: 'Ahmet Yılmaz',
-        contactType: ContactType.whatsapp,
-        contactInfo: '+90 555 123 4567',
+        contactMethods: [
+          ContactMethod(
+            type: ContactMethodType.whatsapp,
+            value: '+90 555 123 4567',
+          ),
+        ],
         createdAt: DateTime.now().subtract(const Duration(hours: 2)),
         region: 'İstanbul',
         category: 'Elektronik',
@@ -183,8 +188,12 @@ class DatabaseService {
         imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
         sellerId: 'seller2',
         sellerName: 'Zeynep Kaya',
-        contactType: ContactType.phone,
-        contactInfo: '+90 533 987 6543',
+        contactMethods: [
+          ContactMethod(
+            type: ContactMethodType.phone,
+            value: '+90 533 987 6543',
+          ),
+        ],
         createdAt: DateTime.now().subtract(const Duration(hours: 5)),
         region: 'Ankara',
         category: 'Elektronik',
@@ -196,8 +205,12 @@ class DatabaseService {
         imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
         sellerId: 'seller3',
         sellerName: 'Mehmet Demir',
-        contactType: ContactType.instagram,
-        contactInfo: '@mehmet.demir',
+        contactMethods: [
+          ContactMethod(
+            type: ContactMethodType.instagram,
+            value: '@mehmet.demir',
+          ),
+        ],
         createdAt: DateTime.now().subtract(const Duration(hours: 8)),
         region: 'İzmir',
         category: 'Giyim & Aksesuar',

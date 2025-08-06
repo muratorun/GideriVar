@@ -1,6 +1,36 @@
-# giderivar
+# GideriVar
 
-A new Flutter project.
+Gerçek Firebase projesi ve production AdMob entegrasyonu ile çalışan Flutter uygulaması.
+
+## Önemli Not - Google Sign-In
+
+Google Sign-In özelliği şu anda iOS dependency conflict nedeniyle geçici olarak devre dışı bırakılmıştır:
+
+**Sorun:** 
+- Firebase SDK (GoogleUtilities ~7.12) ile Google Sign-In iOS SDK (GoogleUtilities ~8.0) arasında version conflict
+- CocoaPods bu versiyonları çözemiyor
+
+**Çözüm Bekliyor:**
+1. `pubspec.yaml`'da `google_sign_in` dependency'si yorum satırında
+2. `auth_service.dart`'ta Google Sign-In kodu yorum satırında ve aktif hale getirme talimatları mevcut
+3. iOS OAuth Client ID'si zaten Info.plist'te yapılandırılmış durumda
+
+**Nasıl Aktif Hale Getirilir:**
+1. `pubspec.yaml`'da `google_sign_in: ^5.4.2` satırının yorum işaretini kaldır
+2. `auth_service.dart`'ta import satırının yorum işaretini kaldır
+3. `signInWithGoogle()` metodundaki TODO yorumunu takip et
+4. `flutter pub get` ve `cd ios && pod install` çalıştır
+
+## Mevcut Özellikler
+
+- ✅ Email/Password Authentication (Firebase Auth)
+- ✅ Firebase Firestore Database  
+- ✅ Firebase Storage
+- ✅ Firebase Messaging (Push Notifications)
+- ✅ Google AdMob (Production)
+- ✅ Hive Local Storage
+- ✅ Provider State Management
+- ⏳ Google Sign-In (Android çalışıyor, iOS dependency conflict)
 
 ## Getting Started
 

@@ -194,6 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        // Google Sign-In Button
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -203,8 +204,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              side: const BorderSide(color: Colors.grey),
                             ),
-                            icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold)),
+                            icon: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
                             label: const Text('Google ile Giriş'),
                           ),
                         ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
+import '../models/contact_method.dart';
+import '../widgets/contact_method_selector.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/location_service.dart';
@@ -16,7 +18,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _contactInfoController = TextEditingController();
   final _sellerNameController = TextEditingController();
   
   List<LocationModel> _countries = [];
@@ -24,7 +25,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   String? _selectedCountry;
   String? _selectedRegion;
   String? _selectedCategory;
-  ContactType _selectedContactType = ContactType.phone;
+  List<ContactMethod> _selectedContactMethods = [];
   bool _isPremium = false;
   bool _isLoading = false;
   bool _isLoadingLocations = false;
@@ -85,7 +86,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _contactInfoController.dispose();
     _sellerNameController.dispose();
     super.dispose();
   }
@@ -272,7 +272,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               const SizedBox(height: 24),
               
               // Satıcı bilgileri
-              _buildSectionTitle('İletişim Bilgileri'),
+              _buildSectionTitle('Satıcı Bilgileri'),
               const SizedBox(height: 16),
               
               // Satıcı adı
@@ -291,57 +291,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 },
               ),
               
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               
-              // İletişim türü
-              const Text(
-                'İletişim Türü *',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              
-              Wrap(
-                spacing: 8,
-                children: ContactType.values.map((type) {
-                  return ChoiceChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(type.icon),
-                        const SizedBox(width: 4),
-                        Text(type.displayName),
-                      ],
-                    ),
-                    selected: _selectedContactType == type,
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _selectedContactType = type);
-                      }
-                    },
-                    selectedColor: const Color(0xFF667eea).withOpacity(0.2),
-                  );
-                }).toList(),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // İletişim bilgisi
-              TextFormField(
-                controller: _contactInfoController,
-                decoration: InputDecoration(
-                  labelText: '${_selectedContactType.displayName} *',
-                  hintText: _getContactHint(_selectedContactType),
-                  border: const OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return '${_selectedContactType.displayName} gerekli';
-                  }
-                  return _validateContact(_selectedContactType, value.trim());
+              // İletişim kanalları
+              ContactMethodSelector(
+                initialMethods: _selectedContactMethods,
+                onMethodsChanged: (methods) {
+                  setState(() {
+                    _selectedContactMethods = methods;
+                  });
                 },
+                title: 'İletişim Bilgileri',
+                isRequired: true,
+                maxMethods: 3,
               ),
               
               const SizedBox(height: 24),
@@ -442,43 +404,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  String _getContactHint(ContactType type) {
-    switch (type) {
-      case ContactType.phone:
-        return '+90 555 123 45 67';
-      case ContactType.whatsapp:
-        return '+90 555 123 45 67';
-      case ContactType.email:
-        return 'ornek@email.com';
-      case ContactType.instagram:
-        return '@kullanici_adi';
-    }
-  }
-
-  String? _validateContact(ContactType type, String value) {
-    switch (type) {
-      case ContactType.phone:
-      case ContactType.whatsapp:
-        if (!RegExp(r'^(\+90|0)?[5][0-9]{9}$').hasMatch(value.replaceAll(' ', ''))) {
-          return 'Geçerli bir telefon numarası girin';
-        }
-        break;
-      case ContactType.email:
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Geçerli bir e-posta adresi girin';
-        }
-        break;
-      case ContactType.instagram:
-        if (!value.startsWith('@') || value.length < 2) {
-          return 'Instagram kullanıcı adı @ ile başlamalı';
-        }
-        break;
-    }
-    return null;
-  }
-
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // İletişim kanalı kontrolü
+    if (_selectedContactMethods.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('En az bir iletişim kanalı seçmelisiniz'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -498,8 +436,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         imageUrls: [], // Resim yükleme özelliği eklenecek
         sellerId: currentUser.id,
         sellerName: _sellerNameController.text.trim(),
-        contactType: _selectedContactType,
-        contactInfo: _contactInfoController.text.trim(),
+        contactMethods: _selectedContactMethods,
         createdAt: DateTime.now(),
         region: _selectedRegion!,
         category: _selectedCategory!,

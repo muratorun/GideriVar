@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../models/user_model.dart';
+import '../widgets/contact_method_display.dart';
 import '../services/auth_service.dart';
 import '../services/ad_service.dart';
 import '../services/database_service.dart';
@@ -171,8 +172,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ),
           
-          // İletişim butonu
-          _buildContactButton(),
+          // İletişim kanalları
+          if (widget.product.contactMethods.isNotEmpty)
+            ContactMethodDisplay(
+              contactMethods: widget.product.contactMethods,
+              showRewardedAdFirst: !_contactRevealed,
+              onAdCompleted: _handleAdCompletion,
+            ),
         ],
       ),
     );
@@ -295,13 +301,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Text(
-                          widget.product.contactType.icon,
-                          style: const TextStyle(fontSize: 16),
+                        const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Colors.grey,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          widget.product.contactType.displayName,
+                          '${widget.product.contactMethods.length} iletişim kanalı',
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 14,
@@ -319,38 +326,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildContactButton() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _handleContactRequest,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF667eea),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: Text(
-            _contactRevealed 
-                ? 'İletişim: ${widget.product.contactInfo}'
-                : 'İletişim Bilgilerini Göster',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleContactRequest() async {
-    if (_contactRevealed) return;
-
+  Future<void> _handleAdCompletion() async {
     if (_currentUser == null) {
       _showLoginRequired();
       return;

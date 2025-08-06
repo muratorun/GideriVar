@@ -4,11 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'services/localization_service.dart';
 import 'services/firebase_messaging_service.dart';
-import 'services/ads_service.dart';
 import 'utils/constants.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -18,63 +16,23 @@ import 'screens/add_product_screen.dart';
 // Firebase background message handler
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint('Background message received: ${message.messageId}');
+  await Firebase.initializeApp();
+  debugPrint('Handling background message: ${message.messageId}');
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Hive'ı initialize et
-  try {
-    await Hive.initFlutter();
-    debugPrint('Hive initialized successfully');
-  } catch (e) {
-    debugPrint('Hive initialization failed: $e');
-  }
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   
-  // Firebase'i initialize et
-  try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      debugPrint('Firebase initialized successfully');
-    } else {
-      debugPrint('Firebase already initialized');
-    }
-    
-    // Firebase Messaging background handler
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
-  }
+  // Set background message handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   
-  // Google Sign-In 7.x initialization with server client ID
-  try {
-    await GoogleSignIn.instance.initialize(
-      serverClientId: '146943865377-51aaimcoq5qt444t6rhckhcgs6hpofj5.apps.googleusercontent.com',
-    );
-    debugPrint('Google Sign-In initialized successfully');
-  } catch (e) {
-    debugPrint('Google Sign-In initialization failed: $e');
-  }
-  
-  // Google Mobile Ads'ı initialize et
-  try {
-    await AdsService.instance.initialize();
-    debugPrint('Google Mobile Ads initialized successfully');
-  } catch (e) {
-    debugPrint('Ads initialization failed: $e');
-  }
-  
-  // LocalizationService'i initialize et
-  try {
-    await LocalizationService().initialize();
-    debugPrint('LocalizationService initialized successfully');
-  } catch (e) {
-    debugPrint('LocalizationService initialization failed: $e');
-  }
+  // Initialize Hive
+  await Hive.initFlutter();
   
   runApp(const MyApp());
 }
@@ -89,13 +47,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider.value(
           value: LocalizationService(),
         ),
-        // Firebase Messaging Service
         Provider<FirebaseMessagingService>(
           create: (_) => FirebaseMessagingService(),
-        ),
-        // Ads Service
-        Provider<AdsService>(
-          create: (_) => AdsService.instance,
+          dispose: (_, service) => service.dispose(),
         ),
       ],
       child: Consumer<LocalizationService>(
@@ -111,7 +65,7 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: localizationService.supportedLocales,
+            supportedLocales: LocalizationService.supportedLocales,
             
             // Theme configuration
             theme: ThemeData(
@@ -138,15 +92,12 @@ class MyApp extends StatelessWidget {
               '/add-product': (context) => const AddProductScreen(),
             },
             
-            // Firebase messaging provider
+            // Firebase messaging initialization
             builder: (context, child) {
-              // Firebase Messaging initialization
-              try {
-                final messagingService = Provider.of<FirebaseMessagingService>(context, listen: false);
-                messagingService.initialize();
-              } catch (e) {
-                debugPrint('Firebase Messaging initialization failed: $e');
-              }
+              // Initialize Firebase Messaging when app starts
+              final messagingService = Provider.of<FirebaseMessagingService>(context, listen: false);
+              messagingService.initialize();
+              
               return child!;
             },
           );

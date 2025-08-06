@@ -1,37 +1,4 @@
-enum ContactType {
-  phone,
-  whatsapp,
-  email,
-  instagram,
-}
-
-extension ContactTypeExtension on ContactType {
-  String get displayName {
-    switch (this) {
-      case ContactType.phone:
-        return 'Telefon';
-      case ContactType.whatsapp:
-        return 'WhatsApp';
-      case ContactType.email:
-        return 'E-posta';
-      case ContactType.instagram:
-        return 'Instagram';
-    }
-  }
-
-  String get icon {
-    switch (this) {
-      case ContactType.phone:
-        return '📞';
-      case ContactType.whatsapp:
-        return '💬';
-      case ContactType.email:
-        return '📧';
-      case ContactType.instagram:
-        return '📷';
-    }
-  }
-}
+import 'contact_method.dart';
 
 class ProductModel {
   final String id;
@@ -40,8 +7,7 @@ class ProductModel {
   final List<String> imageUrls;
   final String sellerId;
   final String sellerName;
-  final ContactType contactType;
-  final String contactInfo;
+  final List<ContactMethod> contactMethods; // Çoklu iletişim kanalları
   final DateTime createdAt;
   final bool isActive;
   final String region;
@@ -55,8 +21,7 @@ class ProductModel {
     required this.imageUrls,
     required this.sellerId,
     required this.sellerName,
-    required this.contactType,
-    required this.contactInfo,
+    required this.contactMethods,
     required this.createdAt,
     this.isActive = true,
     required this.region,
@@ -72,8 +37,7 @@ class ProductModel {
       'imageUrls': imageUrls,
       'sellerId': sellerId,
       'sellerName': sellerName,
-      'contactType': contactType.index,
-      'contactInfo': contactInfo,
+      'contactMethods': contactMethods.map((method) => method.toMap()).toList(),
       'createdAt': createdAt.millisecondsSinceEpoch,
       'isActive': isActive,
       'region': region,
@@ -90,8 +54,9 @@ class ProductModel {
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
       sellerId: map['sellerId'] ?? '',
       sellerName: map['sellerName'] ?? '',
-      contactType: ContactType.values[map['contactType'] ?? 0],
-      contactInfo: map['contactInfo'] ?? '',
+      contactMethods: (map['contactMethods'] as List<dynamic>?)
+          ?.map((methodMap) => ContactMethod.fromMap(methodMap as Map<String, dynamic>))
+          .toList() ?? [],
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
       isActive: map['isActive'] ?? true,
       region: map['region'] ?? '',
@@ -107,8 +72,7 @@ class ProductModel {
     List<String>? imageUrls,
     String? sellerId,
     String? sellerName,
-    ContactType? contactType,
-    String? contactInfo,
+    List<ContactMethod>? contactMethods,
     DateTime? createdAt,
     bool? isActive,
     String? region,
@@ -122,8 +86,7 @@ class ProductModel {
       imageUrls: imageUrls ?? this.imageUrls,
       sellerId: sellerId ?? this.sellerId,
       sellerName: sellerName ?? this.sellerName,
-      contactType: contactType ?? this.contactType,
-      contactInfo: contactInfo ?? this.contactInfo,
+      contactMethods: contactMethods ?? this.contactMethods,
       createdAt: createdAt ?? this.createdAt,
       isActive: isActive ?? this.isActive,
       region: region ?? this.region,
