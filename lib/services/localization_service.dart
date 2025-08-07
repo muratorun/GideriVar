@@ -101,6 +101,37 @@ class LocalizationService extends ChangeNotifier {
 
     return translations[_currentLanguage]?[key] ?? key;
   }
+
+  // Extension metodları için ek metotlar
+  String getText(String key) {
+    return translate(key);
+  }
+
+  String getCategory(String key) {
+    final categories = {
+      'en': {
+        'electronics': 'Electronics',
+        'clothing': 'Clothing',
+        'home': 'Home & Garden',
+        'sports': 'Sports',
+        'books': 'Books',
+        'toys': 'Toys',
+        'automotive': 'Automotive',
+        'other': 'Other',
+      },
+      'tr': {
+        'electronics': 'Elektronik',
+        'clothing': 'Giyim',
+        'home': 'Ev & Bahçe',
+        'sports': 'Spor',
+        'books': 'Kitap',
+        'toys': 'Oyuncak',
+        'automotive': 'Otomotiv',
+        'other': 'Diğer',
+      },
+    };
+    return categories[_currentLanguage]?[key] ?? key;
+  }
 }
 
 // Extension method for easy access from BuildContext

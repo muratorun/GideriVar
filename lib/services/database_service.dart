@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/product_model.dart';
 import '../models/user_model.dart';
-import '../models/contact_method.dart';
 import '../utils/constants.dart';
 
 class DatabaseService {
@@ -8,23 +9,36 @@ class DatabaseService {
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
-  // Simüle edilmiş veriler - Firebase entegrasyonunda değiştirilecek
+  // Firebase Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // Collection references
+  CollectionReference get _usersCollection => 
+      _firestore.collection(AppConstants.usersCollection);
+  CollectionReference get _productsCollection => 
+      _firestore.collection(AppConstants.productsCollection);
+
+  // Cache için yerel veriler (offline destek)
   final List<ProductModel> _products = [];
   final List<UserModel> _users = [];
 
   // Kullanıcı oluştur/güncelle
   Future<bool> createOrUpdateUser(UserModel user) async {
     try {
-      // Firestore entegrasyonu eklenecek
+      await _usersCollection.doc(user.id).set(user.toMap());
+      
+      // Cache güncelle
       final index = _users.indexWhere((u) => u.id == user.id);
       if (index != -1) {
         _users[index] = user;
       } else {
         _users.add(user);
       }
+      
+      debugPrint('User created/updated: ${user.id}');
       return true;
     } catch (e) {
-      print('User create/update error: $e');
+      debugPrint('User create/update error: $e');
       return false;
     }
   }
@@ -32,18 +46,35 @@ class DatabaseService {
   // Kullanıcı getir
   Future<UserModel?> getUser(String userId) async {
     try {
-      // Firestore entegrasyonu eklenecek
-      await Future.delayed(const Duration(milliseconds: 500)); // Simülasyon
-      return _users.firstWhere(
-        (user) => user.id == userId,
-        orElse: () => UserModel(
-          id: userId,
-          email: 'test@example.com',
-          createdAt: DateTime.now(),
-        ),
+      // Önce cache'den kontrol et
+      final cachedUser = _users.where((u) => u.id == userId).firstOrNull;
+      if (cachedUser != null) {
+        return cachedUser;
+      }
+      
+      // Firestore'dan getir
+      final doc = await _usersCollection.doc(userId).get();
+      if (doc.exists) {
+        final user = UserModel.fromMap(doc.data() as Map<String, dynamic>);
+        _users.add(user); // Cache'e ekle
+        return user;
+      }
+      
+      // Kullanıcı yoksa varsayılan oluştur
+      final newUser = UserModel(
+        id: userId,
+        email: 'user@giderivar.com',
+        displayName: 'User',
+        createdAt: DateTime.now(),
+        purchaseLimit: AppConstants.defaultPurchaseLimit,
+        currentPurchases: 0,
+        region: 'Türkiye',
       );
+      
+      await createOrUpdateUser(newUser);
+      return newUser;
     } catch (e) {
-      print('Get user error: $e');
+      debugPrint('Get user error: $e');
       return null;
     }
   }
@@ -51,11 +82,15 @@ class DatabaseService {
   // Ürün oluştur
   Future<bool> createProduct(ProductModel product) async {
     try {
-      // Firestore entegrasyonu eklenecek
+      await _productsCollection.doc(product.id).set(product.toMap());
+      
+      // Cache'e ekle
       _products.add(product);
+      
+      debugPrint('Product created: ${product.title}');
       return true;
     } catch (e) {
-      print('Product create error: $e');
+      debugPrint('Product create error: $e');
       return false;
     }
   }
@@ -63,76 +98,96 @@ class DatabaseService {
   // Belirli bölgedeki ürünleri getir
   Future<List<ProductModel>> getProductsByRegion(String region) async {
     try {
-      // Firestore query entegrasyonu eklenecek
-      await Future.delayed(const Duration(milliseconds: 800)); // Simülasyon
+      Query query = _productsCollection
+          .where('isActive', isEqualTo: true)
+          .orderBy('isPremium', descending: true)
+          .orderBy('createdAt', descending: true);
       
-      // Demo ürünler oluştur
-      if (_products.isEmpty) {
-        _createDemoProducts();
+      if (region != 'Tümü' && region != 'All') {
+        query = query.where('region', isEqualTo: region);
       }
       
-      return _products
-          .where((product) => product.region == region && product.isActive)
-          .toList()
-        ..sort((a, b) {
-          // Premium ürünleri üstte göster
-          if (a.isPremium && !b.isPremium) return -1;
-          if (!a.isPremium && b.isPremium) return 1;
-          return b.createdAt.compareTo(a.createdAt); // Yeniden eskiye
-        });
+      final querySnapshot = await query.get();
+      
+      final products = querySnapshot.docs
+          .map((doc) => ProductModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+      
+      // Cache güncelle
+      _products.clear();
+      _products.addAll(products);
+      
+      debugPrint('Loaded ${products.length} products for region: $region');
+      return products;
     } catch (e) {
-      print('Get products error: $e');
-      return [];
+      debugPrint('Get products by region error: $e');
+      return []; // Hata durumunda boş liste dön
     }
   }
 
   // Tüm ürünleri getir
   Future<List<ProductModel>> getAllProducts() async {
     try {
-      // Firestore entegrasyonu eklenecek
-      await Future.delayed(const Duration(milliseconds: 800)); // Simülasyon
+      final querySnapshot = await _productsCollection
+          .where('isActive', isEqualTo: true)
+          .orderBy('isPremium', descending: true)
+          .orderBy('createdAt', descending: true)
+          .get();
       
-      if (_products.isEmpty) {
-        _createDemoProducts();
-      }
+      final products = querySnapshot.docs
+          .map((doc) => ProductModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
       
-      return _products
-          .where((product) => product.isActive)
-          .toList()
-        ..sort((a, b) {
-          if (a.isPremium && !b.isPremium) return -1;
-          if (!a.isPremium && b.isPremium) return 1;
-          return b.createdAt.compareTo(a.createdAt);
-        });
+      // Cache güncelle
+      _products.clear();
+      _products.addAll(products);
+      
+      debugPrint('Loaded ${products.length} products total');
+      return products;
     } catch (e) {
-      print('Get all products error: $e');
-      return [];
+      debugPrint('Get all products error: $e');
+      return []; // Hata durumunda boş liste dön
     }
   }
 
   // Kullanıcının ürünlerini getir
   Future<List<ProductModel>> getUserProducts(String userId) async {
     try {
-      // Firestore query entegrasyonu eklenecek
-      await Future.delayed(const Duration(milliseconds: 500)); // Simülasyon
+      final querySnapshot = await _productsCollection
+          .where('sellerId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      final products = querySnapshot.docs
+          .map((doc) => ProductModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+      
+      debugPrint('Loaded ${products.length} products for user: $userId');
+      return products;
+    } catch (e) {
+      debugPrint('Get user products error: $e');
+      
+      // Cache'den kullanıcının ürünlerini dön
       return _products
           .where((product) => product.sellerId == userId)
           .toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    } catch (e) {
-      print('Get user products error: $e');
-      return [];
     }
   }
 
   // Ürün sil
   Future<bool> deleteProduct(String productId) async {
     try {
-      // Firestore entegrasyonu eklenecek
+      // Firestore'dan sil
+      await _productsCollection.doc(productId).delete();
+      
+      // Cache'den sil
       _products.removeWhere((product) => product.id == productId);
+      
+      debugPrint('Product deleted: $productId');
       return true;
     } catch (e) {
-      print('Delete product error: $e');
+      debugPrint('Delete product error: $e');
       return false;
     }
   }
@@ -140,17 +195,40 @@ class DatabaseService {
   // Kullanıcının satın alma sayısını artır
   Future<bool> incrementUserPurchaseCount(String userId) async {
     try {
-      // Firestore entegrasyonu eklenecek
+      final userDoc = _usersCollection.doc(userId);
+      
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(userDoc);
+        
+        if (snapshot.exists) {
+          final currentCount = (snapshot.data() as Map<String, dynamic>)['currentPurchases'] ?? 0;
+          transaction.update(userDoc, {'currentPurchases': currentCount + 1});
+        } else {
+          // Kullanıcı yoksa oluştur
+          transaction.set(userDoc, {
+            'id': userId,
+            'email': 'user@giderivar.com',
+            'displayName': 'User',
+            'createdAt': FieldValue.serverTimestamp(),
+            'purchaseLimit': AppConstants.defaultPurchaseLimit,
+            'currentPurchases': 1,
+            'region': 'Türkiye',
+          });
+        }
+      });
+      
+      // Cache güncelle
       final userIndex = _users.indexWhere((u) => u.id == userId);
       if (userIndex != -1) {
         _users[userIndex] = _users[userIndex].copyWith(
           currentPurchases: _users[userIndex].currentPurchases + 1,
         );
-        return true;
       }
-      return false;
+      
+      debugPrint('User purchase count incremented: $userId');
+      return true;
     } catch (e) {
-      print('Increment purchase count error: $e');
+      debugPrint('Increment purchase count error: $e');
       return false;
     }
   }
@@ -158,65 +236,5 @@ class DatabaseService {
   // Kullanıcının satın alma sayısını artır (alias metod)
   Future<bool> incrementUserPurchases(String userId) async {
     return incrementUserPurchaseCount(userId);
-  }
-
-  // Demo ürünler oluştur
-  void _createDemoProducts() {
-    final demoProducts = [
-      ProductModel(
-        id: '1',
-        title: 'iPhone 12 Pro',
-        description: 'Temiz kullanılmış iPhone 12 Pro. Hiçbir problemi yok.',
-        imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
-        sellerId: 'seller1',
-        sellerName: 'Ahmet Yılmaz',
-        contactMethods: [
-          ContactMethod(
-            type: ContactMethodType.whatsapp,
-            value: '+90 555 123 4567',
-          ),
-        ],
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        region: 'İstanbul',
-        category: 'Elektronik',
-        isPremium: true,
-      ),
-      ProductModel(
-        id: '2',
-        title: 'MacBook Air M1',
-        description: 'Az kullanılmış MacBook Air M1. Kutusu ve şarj cihazı mevcut.',
-        imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
-        sellerId: 'seller2',
-        sellerName: 'Zeynep Kaya',
-        contactMethods: [
-          ContactMethod(
-            type: ContactMethodType.phone,
-            value: '+90 533 987 6543',
-          ),
-        ],
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-        region: 'Ankara',
-        category: 'Elektronik',
-      ),
-      ProductModel(
-        id: '3',
-        title: 'Gömlek Takımı',
-        description: 'Hiç giyilmemiş erkek gömlek takımı. Bedeni L.',
-        imageUrls: ['assets/icon/icon.png'], // Yerel asset kullan
-        sellerId: 'seller3',
-        sellerName: 'Mehmet Demir',
-        contactMethods: [
-          ContactMethod(
-            type: ContactMethodType.instagram,
-            value: '@mehmet.demir',
-          ),
-        ],
-        createdAt: DateTime.now().subtract(const Duration(hours: 8)),
-        region: 'İzmir',
-        category: 'Giyim & Aksesuar',
-      ),
-    ];
-    
-    _products.addAll(demoProducts);
   }
 }

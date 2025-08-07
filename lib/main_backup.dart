@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: LocalizationService.supportedLocales,
+            supportedLocales: LocalizationService().supportedLocales,
             
             // Theme configuration
             theme: ThemeData(

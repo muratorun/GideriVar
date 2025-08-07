@@ -118,8 +118,8 @@ class AuthService {
     // Firebase kullanıcı verisi
     return UserModel(
       id: user.uid,
-      email: user.email ?? 'user@example.com',
-      displayName: user.displayName ?? 'User',
+      email: user.email ?? 'kullanici@giderivar.com',
+      displayName: user.displayName ?? 'GideriVar Kullanıcısı',
       createdAt: user.metadata.creationTime ?? DateTime.now(),
       purchaseLimit: AppConstants.defaultPurchaseLimit,
       currentPurchases: 0,

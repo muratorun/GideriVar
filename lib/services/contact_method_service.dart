@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/contact_method.dart';
 
@@ -7,7 +8,7 @@ class ContactMethodService {
       final Uri uri = _buildUri(method);
       return await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      print('Error launching contact method: $e');
+      debugPrint('Error launching contact method: $e');
       return false;
     }
   }

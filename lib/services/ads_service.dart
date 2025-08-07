@@ -7,12 +7,6 @@ class AdsService {
   static AdsService get instance => _instance ??= AdsService._internal();
   AdsService._internal();
 
-  // Test Ads IDs (Google tarafından sağlanan test ID'leri)
-  static const String _testBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
-  static const String _testInterstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
-  static const String _testRewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
-  static const String _testAppOpenAdUnitId = 'ca-app-pub-3940256099942544/3419835294';
-
   // Production Ads IDs (Gerçek AdMob Console'dan alınan)
   static const String _prodBannerAdUnitIdAndroid = 'ca-app-pub-4294862964805642/4426275603';
   static const String _prodBannerAdUnitIdiOS = 'ca-app-pub-4294862964805642/3500174923';
@@ -20,17 +14,9 @@ class AdsService {
   static const String _prodInterstitialAdUnitIdiOS = 'ca-app-pub-4294862964805642/6749186611';
   static const String _prodRewardedAdUnitIdAndroid = 'ca-app-pub-4294862964805642/9275245786';
   static const String _prodRewardedAdUnitIdiOS = 'ca-app-pub-4294862964805642/2809941603';
-  static const String _prodAppOpenAdUnitIdAndroid = 'ca-app-pub-4294862964805642/XXXXXXXXXX'; // Gerekirse oluşturulacak
-  static const String _prodAppOpenAdUnitIdiOS = 'ca-app-pub-4294862964805642/XXXXXXXXXX'; // Gerekirse oluşturulacak
-
-  // Test modunda mı? (Debug build'lerde test ads kullan)
-  bool get isTestMode => kDebugMode;
 
   // Banner Ad ID
   String get bannerAdUnitId {
-    if (isTestMode) {
-      return _testBannerAdUnitId;
-    }
     return Platform.isAndroid 
         ? _prodBannerAdUnitIdAndroid 
         : _prodBannerAdUnitIdiOS;
@@ -38,9 +24,6 @@ class AdsService {
 
   // Interstitial Ad ID
   String get interstitialAdUnitId {
-    if (isTestMode) {
-      return _testInterstitialAdUnitId;
-    }
     return Platform.isAndroid 
         ? _prodInterstitialAdUnitIdAndroid 
         : _prodInterstitialAdUnitIdiOS;
@@ -48,54 +31,19 @@ class AdsService {
 
   // Rewarded Ad ID
   String get rewardedAdUnitId {
-    if (isTestMode) {
-      return _testRewardedAdUnitId;
-    }
     return Platform.isAndroid 
         ? _prodRewardedAdUnitIdAndroid 
         : _prodRewardedAdUnitIdiOS;
-  }
-
-  // App Open Ad ID
-  String get appOpenAdUnitId {
-    if (isTestMode) {
-      return _testAppOpenAdUnitId;
-    }
-    return Platform.isAndroid 
-        ? _prodAppOpenAdUnitIdAndroid 
-        : _prodAppOpenAdUnitIdiOS;
   }
 
   // Initialize Mobile Ads SDK
   Future<void> initialize() async {
     try {
       await MobileAds.instance.initialize();
-      debugPrint('Mobile Ads initialized successfully (Test mode: $isTestMode)');
-      
-      // Test cihazlarını ekle (geliştirme sırasında)
-      if (isTestMode) {
-        await _addTestDevices();
-      }
+      debugPrint('Mobile Ads initialized successfully');
     } catch (e) {
       debugPrint('Mobile Ads initialization failed: $e');
       rethrow;
-    }
-  }
-
-  // Test cihazlarını ekle
-  Future<void> _addTestDevices() async {
-    // Test cihaz ID'lerini buraya ekleyebilirsin
-    // Konsol loglarından kendi cihazının ID'sini alabilirsin
-    final testDeviceIds = <String>[
-      // 'YOUR_DEVICE_ID_HERE', // Kendi cihazının ID'sini buraya ekle
-    ];
-
-    if (testDeviceIds.isNotEmpty) {
-      final requestConfiguration = RequestConfiguration(
-        testDeviceIds: testDeviceIds,
-      );
-      MobileAds.instance.updateRequestConfiguration(requestConfiguration);
-      debugPrint('Test devices added: $testDeviceIds');
     }
   }
 
@@ -209,11 +157,7 @@ class AdsService {
     _lastAdShownTime = DateTime.now();
   }
 
-  // AdMob App ID'leri (AndroidManifest.xml ve Info.plist'te kullanılır)
-  static const String androidAppId = 'ca-app-pub-3940256099942544~3347511713'; // Test App ID
-  static const String iosAppId = 'ca-app-pub-3940256099942544~1458002511'; // Test App ID
-  
-  // Production App ID'leri (Firebase Console'dan alınacak)
-  // static const String androidAppIdProd = 'ca-app-pub-XXXXXXXXXXXXXXXXX~XXXXXXXXXX';
-  // static const String iosAppIdProd = 'ca-app-pub-XXXXXXXXXXXXXXXXX~XXXXXXXXXX';
+  // AdMob App ID'leri (Production)
+  static const String androidAppId = 'ca-app-pub-4294862964805642~3803427250';
+  static const String iosAppId = 'ca-app-pub-4294862964805642~6317909954';
 }

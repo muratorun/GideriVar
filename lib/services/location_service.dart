@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
 
@@ -56,7 +57,7 @@ class LocationService {
         throw Exception('Failed to load countries: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading countries: $e');
+      debugPrint('Error loading countries: $e');
       // Fallback olarak temel ülkeler döndür
       return _getFallbackCountries();
     }
@@ -90,7 +91,7 @@ class LocationService {
         throw Exception('Failed to load cities: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading cities for $countryCode: $e');
+            print('Error searching locations: $e');
       // Fallback için boş liste döndür
       return [];
     }
@@ -121,7 +122,7 @@ class LocationService {
         throw Exception('Failed to search locations: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error searching locations: $e');
+      debugPrint('Error searching locations: $e');
       return [];
     }
   }
@@ -144,7 +145,7 @@ class LocationService {
         );
       }
     } catch (e) {
-      print('Error getting current location: $e');
+      debugPrint('Error getting current location: $e');
     }
     return null;
   }
