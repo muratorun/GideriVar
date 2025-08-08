@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart'; // Android ve iOS için güncel versiyon
 import '../models/user_model.dart';
 import '../utils/constants.dart';
+import 'auth_persistence_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -13,17 +14,64 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Auth durumu
-  bool get isAuthenticated => _auth.currentUser != null;
-  String? get currentUserId => _auth.currentUser?.uid;
+  bool get isAuthenticated => _auth.currentUser != null || AuthPersistenceService.isUserLoggedIn();
+  String? get currentUserId => _auth.currentUser?.uid ?? AuthPersistenceService.getSavedUserId();
 
   // Email/Password ile kayıt
   Future<bool> signUpWithEmailPassword(String email, String password) async {
     try {
+      // Email formatını kontrol et
+      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+        debugPrint('Sign up error: Invalid email format');
+        return false;
+      }
+
+      // Şifre uzunluğunu kontrol et
+      if (password.length < 6) {
+        debugPrint('Sign up error: Password too short');
+        return false;
+      }
+
+      debugPrint('Attempting to create user with email: $email');
+      
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return credential.user != null;
+      
+      if (credential.user != null) {
+        debugPrint('User created successfully: ${credential.user!.uid}');
+        
+        // Hive'a kaydet
+        await AuthPersistenceService.saveUserSession(
+          userId: credential.user!.uid,
+          email: credential.user!.email ?? email,
+          displayName: credential.user!.displayName,
+        );
+        
+        return true;
+      } else {
+        debugPrint('Sign up error: No user returned from createUserWithEmailAndPassword');
+        return false;
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Sign up FirebaseAuthException: ${e.code} - ${e.message}');
+      
+      // Production hata detayları
+      switch (e.code) {
+        case 'weak-password':
+          debugPrint('Production Error: Password is too weak');
+          break;
+        case 'email-already-in-use':
+          debugPrint('Production Error: Email already registered');
+          break;
+        case 'internal-error':
+          debugPrint('Production Error: Firebase project configuration issue - check OAuth clients');
+          break;
+        default:
+          debugPrint('Production Error: ${e.code}');
+      }
+      return false;
     } catch (e) {
       debugPrint('Sign up error: $e');
       return false;
@@ -33,42 +81,77 @@ class AuthService {
   // Email/Password ile giriş
   Future<bool> signInWithEmailPassword(String email, String password) async {
     try {
+      // Email formatını kontrol et
+      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+        debugPrint('Sign in error: Invalid email format');
+        return false;
+      }
+
+      debugPrint('Attempting to sign in with email: $email');
+      
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return credential.user != null;
+      
+      if (credential.user != null) {
+        debugPrint('User signed in successfully: ${credential.user!.uid}');
+        
+        // Hive'a kaydet
+        await AuthPersistenceService.saveUserSession(
+          userId: credential.user!.uid,
+          email: credential.user!.email ?? email,
+          displayName: credential.user!.displayName,
+        );
+        
+        return true;
+      } else {
+        debugPrint('Sign in error: No user returned from signInWithEmailAndPassword');
+        return false;
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Sign in FirebaseAuthException: ${e.code} - ${e.message}');
+      
+      // Production hata detayları
+      switch (e.code) {
+        case 'user-not-found':
+          debugPrint('Production Error: No user found with this email');
+          break;
+        case 'wrong-password':
+          debugPrint('Production Error: Incorrect password');
+          break;
+        case 'internal-error':
+          debugPrint('Production Error: Firebase project configuration issue - check OAuth clients');
+          break;
+        default:
+          debugPrint('Production Error: ${e.code}');
+      }
+      return false;
     } catch (e) {
       debugPrint('Sign in error: $e');
       return false;
     }
   }
 
-    // Google ile giriş (Google Sign-In 7.x API - Android ve iOS uyumlu)
+  // Google ile giriş (Google Sign-In 7.x official API)
   Future<bool> signInWithGoogle() async {
     try {
       debugPrint('Google Sign-In process started');
       
-      // Google Sign-In 7.x API - authenticate() kullan
-      final GoogleSignInAccount? googleAccount = await GoogleSignIn.instance.authenticate();
+      // Google Sign-In 7.x correct usage
+      final GoogleSignInAccount? account = await GoogleSignIn.instance.authenticate();
       
-      if (googleAccount == null) {
+      if (account == null) {
         debugPrint('Google Sign-In cancelled by user');
         return false;
       }
 
-      // Authorization için access token al
-      final scopes = <String>['email', 'profile'];
-      final authClient = googleAccount.authorizationClient;
-      final authorization = await authClient.authorizeScopes(scopes);
-      
-      // Authentication data al
-      final GoogleSignInAuthentication googleAuth = googleAccount.authentication;
+      // Authentication token'ları al - 7.x'de sadece idToken var
+      final GoogleSignInAuthentication auth = await account.authentication;
 
-      // Firebase credential oluştur
-      final credential = GoogleAuthProvider.credential(
-        accessToken: authorization.accessToken, // Authorization client'dan access token
-        idToken: googleAuth.idToken,
+      // Firebase credential oluştur - 7.x'de sadece idToken kullan
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        idToken: auth.idToken,
       );
 
       // Firebase'e Google credential ile giriş yap
@@ -76,6 +159,14 @@ class AuthService {
       
       if (userCredential.user != null) {
         debugPrint('Google Sign-In successful: ${userCredential.user!.email}');
+        
+        // Hive'a kaydet
+        await AuthPersistenceService.saveUserSession(
+          userId: userCredential.user!.uid,
+          email: userCredential.user!.email ?? 'google@giderivar.com',
+          displayName: userCredential.user!.displayName,
+        );
+        
         return true;
       } else {
         debugPrint('Google Sign-In failed: No user returned');
@@ -91,6 +182,7 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+      await AuthPersistenceService.clearUserSession();
       debugPrint('User signed out successfully');
     } catch (e) {
       debugPrint('Sign out error: $e');

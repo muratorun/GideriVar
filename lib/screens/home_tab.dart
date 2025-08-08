@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../models/product_model.dart';
+import '../models/location_model.dart';
 import '../widgets/contact_method_display.dart';
+import '../widgets/banner_ad_widget.dart';
 import '../services/database_service.dart';
-import '../services/ad_service.dart';
-import '../services/location_service.dart';
+import '../services/location_service_v2.dart';
 import '../utils/constants.dart';
 import 'product_detail_screen.dart';
 
@@ -34,7 +36,7 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> _initializeApp() async {
     // Kullanıcının mevcut konumunu al
     if (AppConstants.useOnlineLocationService) {
-      _currentLocation = await LocationService().getCurrentLocation();
+      _currentLocation = await LocationServiceV2().getCurrentLocation();
       if (_currentLocation != null) {
         _selectedCountry = _currentLocation!.name;
       }
@@ -49,7 +51,7 @@ class _HomeTabState extends State<HomeTab> {
     
     setState(() => _isLoadingLocations = true);
     try {
-      final countries = await LocationService().getCountries();
+      final countries = await LocationServiceV2().getCountries();
       setState(() {
         _countries = countries;
         _isLoadingLocations = false;
@@ -68,7 +70,7 @@ class _HomeTabState extends State<HomeTab> {
     
     setState(() => _isLoadingLocations = true);
     try {
-      final cities = await LocationService().getCitiesByCountry(countryCode);
+      final cities = await LocationServiceV2().getCitiesByCountry(countryCode);
       setState(() {
         _cities = cities;
         _isLoadingLocations = false;
@@ -77,7 +79,7 @@ class _HomeTabState extends State<HomeTab> {
       setState(() => _isLoadingLocations = false);
       // Türkiye için fallback
       if (countryCode.toLowerCase() == 'tr') {
-        _cities = LocationService().getTurkishCities();
+        _cities = LocationServiceV2().getTurkishCities();
       }
     }
   }
@@ -127,7 +129,10 @@ class _HomeTabState extends State<HomeTab> {
           // Banner reklam
           Container(
             margin: const EdgeInsets.all(8),
-            child: AdService().getBannerAd() ?? const SizedBox.shrink(),
+            child: BannerAdWidget(
+              adSize: AdSize.banner,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+            ),
           ),
           // Filtre durumu
           if (_selectedRegion != null || _selectedCategory != null)

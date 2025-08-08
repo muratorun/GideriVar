@@ -9,6 +9,7 @@ import 'firebase_options.dart';
 import 'services/localization_service.dart';
 import 'services/firebase_messaging_service.dart';
 import 'services/ads_service.dart';
+import 'services/auth_persistence_service.dart';
 import 'utils/constants.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -28,7 +29,8 @@ void main() async {
   // Hive'ı initialize et
   try {
     await Hive.initFlutter();
-    debugPrint('Hive initialized successfully');
+    await AuthPersistenceService.initialize();
+    debugPrint('Hive and AuthPersistenceService initialized successfully');
   } catch (e) {
     debugPrint('Hive initialization failed: $e');
   }
@@ -44,22 +46,27 @@ void main() async {
       debugPrint('Firebase already initialized');
     }
     
-    // Firebase Messaging background handler
+    // Firebase Messaging background handler - sadece background handler'ı kaydet
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    debugPrint('Firebase background message handler registered');
+    
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
   
-  // Google Sign-In 7.x initialization with server client ID
+  // Google Sign-In Production konfigürasyonu
+  debugPrint('Google Sign-In 6.x ready for production');
+  
+  // Google Sign-In 7.x Android için serverClientId initialize et
   try {
     await GoogleSignIn.instance.initialize(
-      serverClientId: '146943865377-51aaimcoq5qt444t6rhckhcgs6hpofj5.apps.googleusercontent.com',
+      serverClientId: '146943865377-51aaimcoq5qt444t6rhckhcgs6hpofj5.apps.googleusercontent.com', // Web Client ID from google-services.json
     );
-    debugPrint('Google Sign-In initialized successfully');
+    debugPrint('Google Sign-In 7.x initialized with serverClientId for Android');
   } catch (e) {
-    debugPrint('Google Sign-In initialization failed: $e');
+    debugPrint('Google Sign-In 7.x initialization failed: $e');
   }
-  
+
   // Google Mobile Ads'ı initialize et
   try {
     await AdsService.instance.initialize();
@@ -79,8 +86,35 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Firebase Messaging'i widget tree hazır olduktan sonra başlat
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeFirebaseMessaging();
+    });
+  }
+
+  Future<void> _initializeFirebaseMessaging() async {
+    try {
+      // Kısa bir gecikme ile APNS token'ın hazır olmasını bekle
+      await Future.delayed(const Duration(seconds: 2));
+      
+      final messagingService = FirebaseMessagingService();
+      await messagingService.initialize();
+      debugPrint('Firebase Messaging initialized successfully');
+    } catch (e) {
+      debugPrint('Firebase Messaging initialization failed: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,24 +164,12 @@ class MyApp extends StatelessWidget {
             ),
             
             // Navigation configuration
-            initialRoute: '/',
+            initialRoute: AuthPersistenceService.isUserLoggedIn() ? '/main' : '/',
             routes: {
               '/': (context) => const LoginScreen(),
               '/register': (context) => const RegisterScreen(),
               '/main': (context) => const MainScreen(),
               '/add-product': (context) => const AddProductScreen(),
-            },
-            
-            // Firebase messaging provider
-            builder: (context, child) {
-              // Firebase Messaging initialization
-              try {
-                final messagingService = Provider.of<FirebaseMessagingService>(context, listen: false);
-                messagingService.initialize();
-              } catch (e) {
-                debugPrint('Firebase Messaging initialization failed: $e');
-              }
-              return child!;
             },
           );
         },

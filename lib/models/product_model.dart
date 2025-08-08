@@ -11,6 +11,7 @@ class ProductModel {
   final DateTime createdAt;
   final bool isActive;
   final String region;
+  final String? district; // İlçe bilgisi
   final String? category;
   final bool isPremium; // Premium ilanlar üstte gösterilir
 
@@ -25,6 +26,7 @@ class ProductModel {
     required this.createdAt,
     this.isActive = true,
     required this.region,
+    this.district,
     this.category,
     this.isPremium = false,
   });
@@ -41,6 +43,7 @@ class ProductModel {
       'createdAt': createdAt.millisecondsSinceEpoch,
       'isActive': isActive,
       'region': region,
+      'district': district,
       'category': category,
       'isPremium': isPremium,
     };
@@ -60,6 +63,7 @@ class ProductModel {
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
       isActive: map['isActive'] ?? true,
       region: map['region'] ?? '',
+      district: map['district'],
       category: map['category'],
       isPremium: map['isPremium'] ?? false,
     );
@@ -76,6 +80,7 @@ class ProductModel {
     DateTime? createdAt,
     bool? isActive,
     String? region,
+    String? district,
     String? category,
     bool? isPremium,
   }) {
@@ -90,6 +95,7 @@ class ProductModel {
       createdAt: createdAt ?? this.createdAt,
       isActive: isActive ?? this.isActive,
       region: region ?? this.region,
+      district: district ?? this.district,
       category: category ?? this.category,
       isPremium: isPremium ?? this.isPremium,
     );

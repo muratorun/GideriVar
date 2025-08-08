@@ -7,6 +7,7 @@ import '../services/database_service.dart';
 import '../services/localization_service.dart';
 import '../utils/constants.dart';
 import 'product_detail_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -631,9 +632,10 @@ class _ProfileTabState extends State<ProfileTab> {
               title: Text(context.tr('edit_profile')),
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.tr('feature_coming_soon')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EditProfileScreen(),
                   ),
                 );
               },

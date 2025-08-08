@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "146943865377",
+    "project_id": "giderivarapp",
+    "storage_bucket": "giderivarapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:146943865377:android:2724a5b88fa1c49bf1e960",
+        "android_client_info": {
+          "package_name": "com.moat.giderivar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEnZt7c7-wjtSI1FkClhJaFkINAwxA2DM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

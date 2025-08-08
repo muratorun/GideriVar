@@ -22,8 +22,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
   
   List<LocationModel> _countries = [];
   List<LocationModel> _cities = [];
+  List<LocationModel> _districts = [];
   String? _selectedCountry;
   String? _selectedRegion;
+  String? _selectedDistrict;
   String? _selectedCategory;
   List<ContactMethod> _selectedContactMethods = [];
   bool _isPremium = false;
@@ -71,6 +73,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
       final cities = await LocationService().getCitiesByCountry(countryCode);
       setState(() {
         _cities = cities;
+        _districts = []; // City değişince districts temizle
+        _selectedDistrict = null;
         _isLoadingLocations = false;
       });
     } catch (e) {
@@ -79,6 +83,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
       if (countryCode.toLowerCase() == 'tr') {
         _cities = LocationService().getTurkishCities();
       }
+    }
+  }
+
+  Future<void> _loadDistrictsForCity(String cityCode) async {
+    if (!AppConstants.useOnlineLocationService) return;
+    
+    setState(() => _isLoadingLocations = true);
+    try {
+      final districts = await LocationService().getDistrictsByCity(cityCode);
+      setState(() {
+        _districts = districts;
+        _selectedDistrict = null; // Reset district selection
+        _isLoadingLocations = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingLocations = false);
     }
   }
 
@@ -189,6 +209,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               // Ülke/Bölge seçimi
               DropdownButtonFormField<String>(
                 value: _selectedCountry,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Country/Region *',
                   border: OutlineInputBorder(),
@@ -197,12 +218,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 items: _countries.map((country) {
                   return DropdownMenuItem(
                     value: country.name,
-                    child: Row(
-                      children: [
-                        if (country.flag != null) Text(country.flag!),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(country.name)),
-                      ],
+                    child: Text(
+                      '${country.flag != null ? country.flag! + ' ' : ''}${country.name}',
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
                 }).toList(),
@@ -232,6 +250,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               // Şehir seçimi
               DropdownButtonFormField<String>(
                 value: _selectedRegion,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'City',
                   border: OutlineInputBorder(),
@@ -250,10 +269,55 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   }),
                 ],
                 onChanged: (value) {
-                  setState(() => _selectedRegion = value);
+                  setState(() {
+                    _selectedRegion = value;
+                    if (value != null && value != 'Not Specified') {
+                      // İlçeleri yükle
+                      final selectedCity = _cities.firstWhere(
+                        (c) => c.name == value,
+                        orElse: () => LocationModel(name: value, code: value.toLowerCase()),
+                      );
+                      _loadDistrictsForCity(selectedCity.code);
+                    } else {
+                      // City seçimi kaldırıldıysa districts temizle
+                      _districts.clear();
+                      _selectedDistrict = null;
+                    }
+                  });
                 },
               ),
               
+              const SizedBox(height: 16),
+              
+              // İlçe seçimi (sadece şehir seçildiyse göster)
+              if (_selectedRegion != null && _selectedRegion != 'Not Specified' && _districts.isNotEmpty)
+                DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'District',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.place),
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 'Not Specified',
+                      child: Text('Not Specified'),
+                    ),
+                    ..._districts.map((district) {
+                      return DropdownMenuItem(
+                        value: district.name,
+                        child: Text(district.name),
+                      );
+                    }),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedDistrict = value);
+                  },
+                ),
+              
+              if (_selectedRegion != null && _selectedRegion != 'Not Specified' && _districts.isNotEmpty)
+                const SizedBox(height: 16),
               if (_isLoadingLocations) ...[
                 const SizedBox(height: 8),
                 const Row(
@@ -439,6 +503,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         contactMethods: _selectedContactMethods,
         createdAt: DateTime.now(),
         region: _selectedRegion!,
+        district: _selectedDistrict != 'Not Specified' ? _selectedDistrict : null,
         category: _selectedCategory!,
         isPremium: _isPremium,
       );
