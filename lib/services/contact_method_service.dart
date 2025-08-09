@@ -36,6 +36,10 @@ class ContactMethodService {
         // Instagram deep link
         String username = method.value.replaceAll('@', '');
         return Uri.parse('https://instagram.com/$username');
+      
+      case ContactMethodType.inAppMessage:
+        // Uygulama içi mesajlaşma için özel scheme
+        return Uri(scheme: 'giderivar', path: 'message', query: 'userId=${method.value}');
     }
   }
 
@@ -49,6 +53,8 @@ class ContactMethodService {
         return 'E-mail Gönder';
       case ContactMethodType.instagram:
         return 'Instagram\'da Mesaj At';
+      case ContactMethodType.inAppMessage:
+        return 'Uygulama İçi Mesaj Gönder';
     }
   }
 
@@ -62,6 +68,8 @@ class ContactMethodService {
         return 'E-mail uygulaması açılıyor...';
       case ContactMethodType.instagram:
         return 'Instagram açılıyor...';
+      case ContactMethodType.inAppMessage:
+        return 'Mesaj ekranına yönlendiriliyor...';
     }
   }
 

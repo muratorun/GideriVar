@@ -367,6 +367,11 @@ class _ContactMethodSelectorState extends State<ContactMethodSelector> {
           FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9._]')),
           LengthLimitingTextInputFormatter(30),
         ];
+      case ContactMethodType.inAppMessage:
+        return [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9._@]')),
+          LengthLimitingTextInputFormatter(30),
+        ];
     }
   }
 }

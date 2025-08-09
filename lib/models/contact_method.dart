@@ -4,7 +4,8 @@ enum ContactMethodType {
   phone,
   whatsapp,
   email,
-  instagram
+  instagram,
+  inAppMessage // Uygulama içi mesajlaşma eklendi
 }
 
 class ContactMethod {
@@ -31,6 +32,8 @@ class ContactMethod {
         return 'E-mail';
       case ContactMethodType.instagram:
         return 'Instagram';
+      case ContactMethodType.inAppMessage:
+        return 'Uygulama İçi Mesaj';
     }
   }
 
@@ -45,6 +48,8 @@ class ContactMethod {
         return Icons.email;
       case ContactMethodType.instagram:
         return Icons.camera_alt;
+      case ContactMethodType.inAppMessage:
+        return Icons.message;
     }
   }
 
@@ -59,6 +64,8 @@ class ContactMethod {
         return const Color(0xFFFF5722);
       case ContactMethodType.instagram:
         return const Color(0xFFE4405F);
+      case ContactMethodType.inAppMessage:
+        return const Color(0xFF9C27B0); // Mor renk
     }
   }
 
@@ -73,6 +80,8 @@ class ContactMethod {
         return r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
       case ContactMethodType.instagram:
         return r'^[a-zA-Z0-9._]{1,30}$';
+      case ContactMethodType.inAppMessage:
+        return null; // Uygulama içi mesaj için doğrulama yok
     }
   }
 
@@ -87,6 +96,8 @@ class ContactMethod {
         return 'ornek@email.com';
       case ContactMethodType.instagram:
         return 'kullaniciadi';
+      case ContactMethodType.inAppMessage:
+        return 'Uygulama içi mesajlaşma açık';
     }
   }
 
@@ -110,6 +121,8 @@ class ContactMethod {
         return TextInputType.emailAddress;
       case ContactMethodType.instagram:
         return TextInputType.text;
+      case ContactMethodType.inAppMessage:
+        return TextInputType.none; // Giriş yok
     }
   }
 
@@ -131,6 +144,8 @@ class ContactMethod {
             return 'Geçerli bir e-mail adresi giriniz';
           case ContactMethodType.instagram:
             return 'Geçerli bir Instagram kullanıcı adı giriniz';
+          case ContactMethodType.inAppMessage:
+            return null; // Uygulama içi mesaj için hata yok
         }
       }
     }
